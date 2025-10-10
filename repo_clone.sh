@@ -200,6 +200,14 @@ clone_repo "https://github.com/ihsanulrahman/device_xiaomi_miatoll" \
            "16-volt" \
            "0"
 
+# DSPVolumeSynchronizer
+print_section "DSPVolumeSynchronizer"
+clone_repo "https://github.com/ihsanulrahman/packages_apps_DSPVolumeSynchronizer" \
+           "packages/apps/DSPVolumeSynchronizer" \
+           "main" \
+           "1"
+
+
 # Summary
 print_section "CLONING SUMMARY"
 echo -e "${WHITE}Repository status:${END}"
@@ -228,6 +236,7 @@ check_repo "kernel/xiaomi/sm6250" "Kernel"
 check_repo "hardware/sony/timekeep" "Timekeep Hardware"
 check_repo "vendor/xiaomi/miuicamera-miatoll" "MIUI Camera"
 check_repo "device/xiaomi/miatoll" "Miatoll Device Tree"
+check_repo "packages/apps/DSPVolumeSynchronizer" "DSP Volume Synchronizer"
 
 echo ""
 echo -e "${WHITE}Results: ${GREEN}${success}${END}/${WHITE}${total}${END} repositories successfully cloned"
