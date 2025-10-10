@@ -190,8 +190,8 @@ clone_repo "https://github.com/LineageOS/android_hardware_sony_timekeep" \
 
 # Miui Camera
 print_section "MIUI CAMERA"
-clone_repo "https://github.com/ihsanulrahman/vendor_xiaomi_miuicamera" \
-           "vendor/xiaomi/miuicamera" \
+clone_repo "https://github.com/ihsanulrahman/vendor_xiaomi_miuicamera-miatoll" \
+           "vendor/xiaomi/miuicamera-miatoll" \
            "16" \
            "0"
 
@@ -226,7 +226,7 @@ check_repo "vendor/xiaomi/miatoll" "Vendor Miatoll"
 check_repo "vendor/xiaomi/sm6250-common" "Vendor Common"
 check_repo "kernel/xiaomi/sm6250" "Kernel"
 check_repo "hardware/sony/timekeep" "Timekeep Hardware"
-check_repo "vendor/xiaomi/miuicamera" "MIUI Camera"
+check_repo "vendor/xiaomi/miuicamera-miatoll" "MIUI Camera"
 check_repo "device/xiaomi/miatoll" "Miatoll Device Tree"
 
 echo ""
