@@ -155,19 +155,19 @@ echo ""
 
 # Common DT
 print_section "COMMON DEVICE TREE"
-clone_repo "https://github.com/ihsanulrahman/device_xiaomi_sm6250-common" \
+clone_repo "https://github.com/mi-atoll/device_xiaomi_sm6250-common" \
            "device/xiaomi/sm6250-common" \
            "16-volt" \
            "0"
 
 # Vendor Sources
 print_section "VENDOR REPOSITORIES"
-clone_repo "https://github.com/ihsanulrahman/vendor_xiaomi_miatoll" \
+clone_repo "https://github.com/mi-atoll/vendor_xiaomi_miatoll" \
            "vendor/xiaomi/miatoll" \
            "16" \
            "1"
 
-clone_repo "https://github.com/ihsanulrahman/vendor_xiaomi_sm6250-common" \
+clone_repo "https://github.com/mi-atoll/vendor_xiaomi_sm6250-common" \
            "vendor/xiaomi/sm6250-common" \
            "16" \
            "1"
@@ -190,23 +190,15 @@ clone_repo "https://github.com/LineageOS/android_hardware_sony_timekeep" \
 
 # Miui Camera
 print_section "MIUI CAMERA"
-clone_repo "https://github.com/ihsanulrahman/vendor_xiaomi_miuicamera-miatoll" \
+clone_repo "https://github.com/mi-atoll/vendor_xiaomi_miuicamera-miatoll" \
            "vendor/xiaomi/miuicamera-miatoll" \
            "16" \
            "0"
 
-clone_repo "https://github.com/ihsanulrahman/device_xiaomi_miatoll" \
+clone_repo "https://github.com/mi-atoll/device_xiaomi_miatoll" \
            "device/xiaomi/miatoll" \
            "16-volt" \
            "0"
-
-# DSPVolumeSynchronizer
-print_section "DSPVolumeSynchronizer"
-clone_repo "https://github.com/ihsanulrahman/packages_apps_DSPVolumeSynchronizer" \
-           "packages/apps/DSPVolumeSynchronizer" \
-           "main" \
-           "1"
-
 
 # Summary
 print_section "CLONING SUMMARY"
@@ -236,7 +228,6 @@ check_repo "kernel/xiaomi/sm6250" "Kernel"
 check_repo "hardware/sony/timekeep" "Timekeep Hardware"
 check_repo "vendor/xiaomi/miuicamera-miatoll" "MIUI Camera"
 check_repo "device/xiaomi/miatoll" "Miatoll Device Tree"
-check_repo "packages/apps/DSPVolumeSynchronizer" "DSP Volume Synchronizer"
 
 echo ""
 echo -e "${WHITE}Results: ${GREEN}${success}${END}/${WHITE}${total}${END} repositories successfully cloned"
