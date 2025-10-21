@@ -157,7 +157,7 @@ echo ""
 print_section "COMMON DEVICE TREE"
 clone_repo "https://github.com/mi-atoll/device_xiaomi_sm6250-common" \
            "device/xiaomi/sm6250-common" \
-           "16-volt" \
+           "16-pos" \
            "0"
 
 # Vendor Sources
@@ -197,7 +197,7 @@ clone_repo "https://github.com/mi-atoll/vendor_xiaomi_miuicamera-miatoll" \
 
 clone_repo "https://github.com/mi-atoll/device_xiaomi_miatoll" \
            "device/xiaomi/miatoll" \
-           "16-volt" \
+           "16-pos" \
            "0"
 
 # Summary
