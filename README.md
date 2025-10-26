@@ -1,11 +1,23 @@
 # Clonify 🚀
 
-A simple shell script for cloning my device repositories.
+A simple set of shell scripts for cloning my device repositories, setting up Git configs, and installing GPG keys.
 
-## Quick Start
+## Quick start
 
-### Direct One-Liner Execution
+### Direct one-liner execution
+
+Clone device repositories:
 
 ```bash
-# Download and run immediately
 wget -q https://raw.githubusercontent.com/ihsanulrahman/Clonify/main/repo_clone.sh -O - | bash
+```
+
+Set up Git configs and GPG keys:
+
+```bash
+wget -q https://raw.githubusercontent.com/ihsanulrahman/Clonify/main/git-gpg.sh -O - | bash
+```
+
+Notes
+- These are convenience one-liners that download and execute remote scripts. Review the scripts before running them.
+- Ensure you have wget and bash installed on your system.
