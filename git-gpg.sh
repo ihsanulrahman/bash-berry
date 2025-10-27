@@ -117,43 +117,56 @@ setup_gpg() {
         return 1
     }
     
-    # Import GPG keys
-    print_status "Importing GPG keys..."
+    # Import GPG keys - specifically look for private.asc and public.asc
+    print_status "Looking for key files..."
     
-    # Look for common GPG key file patterns
-    key_files=$(find . -type f \( -name "*.asc" -o -name "*.gpg" -o -name "*.key" -o -name "public*" -o -name "private*" \))
-    
-    if [ -z "$key_files" ]; then
-        print_error "No GPG key files found in the repository"
+    # Check for specific key files
+    if [ ! -f "private.asc" ] && [ ! -f "public.asc" ]; then
+        print_error "Neither private.asc nor public.asc found in the repository"
+        echo "Available files:"
+        ls -la
         cd ..
         return 1
     fi
     
-    # Import all found key files
     imported_keys=()
     key_id=""
     
-    for key_file in $key_files; do
-        print_status "Processing $key_file..."
-        
-        # Try to extract key ID from public key files
-        if [[ "$key_file" =~ [Pp]ublic|\.asc$ ]] && [ -z "$key_id" ]; then
-            print_status "Attempting to extract key ID from $key_file"
-            extracted_key_id=$(extract_key_id "$key_file")
+    # Import private key first
+    if [ -f "private.asc" ]; then
+        print_status "Importing private key from private.asc..."
+        if gpg2 --import "private.asc"; then
+            imported_keys+=("private.asc")
+            print_success "Private key imported successfully"
+        else
+            print_error "Failed to import private key"
+            cd ..
+            return 1
+        fi
+    else
+        print_warning "private.asc not found, skipping private key import"
+    fi
+    
+    # Import public key
+    if [ -f "public.asc" ]; then
+        print_status "Importing public key from public.asc..."
+        if gpg2 --import "public.asc"; then
+            imported_keys+=("public.asc")
+            print_success "Public key imported successfully"
+            
+            # Extract key ID from public key
+            print_status "Extracting key ID from public.asc..."
+            extracted_key_id=$(extract_key_id "public.asc")
             if [ -n "$extracted_key_id" ]; then
                 key_id="$extracted_key_id"
                 print_success "Extracted key ID: $key_id"
             fi
-        fi
-        
-        # Import the key
-        if gpg2 --import "$key_file" 2>/dev/null; then
-            imported_keys+=("$key_file")
-            print_success "Successfully imported $key_file"
         else
-            print_warning "Failed to import $key_file or key already exists"
+            print_warning "Failed to import public key (may already exist)"
         fi
-    done
+    else
+        print_warning "public.asc not found, skipping public key import"
+    fi
     
     if [ ${#imported_keys[@]} -eq 0 ]; then
         print_error "No GPG keys were successfully imported"
@@ -161,7 +174,7 @@ setup_gpg() {
         return 1
     fi
     
-    # If we couldn't extract key ID from files, try to get it from keyring
+    # If we couldn't extract key ID from public.asc, try to get it from keyring
     if [ -z "$key_id" ]; then
         print_status "Getting GPG key ID from keyring..."
         key_id=$(gpg2 --list-secret-keys --keyid-format LONG 2>/dev/null | grep sec | tail -1 | awk '{print $2}' | cut -d'/' -f2)
@@ -174,6 +187,16 @@ setup_gpg() {
     fi
     
     print_success "Using GPG key ID: $key_id"
+    
+    # Verify private key is imported and usable
+    print_status "Verifying private key import..."
+    if gpg2 --list-secret-keys "$key_id" >/dev/null 2>&1; then
+        print_success "Private key successfully imported and available"
+    else
+        print_error "Private key not found or not usable"
+        cd ..
+        return 1
+    fi
     
     # Configure Git to use the GPG key with gpg2
     print_status "Configuring Git to use GPG key..."
@@ -192,9 +215,9 @@ setup_gpg() {
 test_gpg_signing() {
     print_status "Testing GPG configuration..."
     
-    # Test if GPG key is properly set up
+    # Test if GPG key is properly set up with private key
     if echo "test" | gpg2 --clearsign > /dev/null 2>&1; then
-        print_success "GPG signing test passed"
+        print_success "GPG signing test passed - private key is working"
     else
         print_warning "GPG signing test failed - you may need to set up GPG agent or enter passphrase"
     fi
@@ -217,6 +240,25 @@ show_configuration() {
     echo "Commit Signing: $(git config --global commit.gpgsign)"
     echo "Tag Signing: $(git config --global tag.gpgsign)"
     echo "GPG Program: $(git config --global gpg.program)"
+}
+
+# Verify key import
+verify_key_import() {
+    local key_id="$1"
+    
+    print_status "Verifying key import..."
+    
+    echo "Public keys:"
+    gpg2 --list-keys "$key_id" 2>/dev/null
+    
+    echo "Private keys:"
+    gpg2 --list-secret-keys "$key_id" 2>/dev/null
+    
+    if gpg2 --list-secret-keys "$key_id" >/dev/null 2>&1; then
+        print_success "Private key is properly imported"
+    else
+        print_error "Private key is missing - signing will not work"
+    fi
 }
 
 # Trust the GPG key (optional)
@@ -261,6 +303,9 @@ main() {
     if [ -n "$key_id" ]; then
         trust_gpg_key "$key_id"
         echo ""
+        
+        verify_key_import "$key_id"
+        echo ""
     fi
     
     test_gpg_signing
@@ -273,7 +318,7 @@ main() {
     
     # Display next steps
     print_status "Next steps:"
-    echo "1. Add your GPG key to GitHub/GitLab:"
+    echo "1. Add your GPG public key to GitHub/GitLab:"
     echo "   gpg2 --armor --export $(git config --global user.signingkey)"
     echo "2. Test with a signed commit:"
     echo "   git init /tmp/test-repo && cd /tmp/test-repo"
