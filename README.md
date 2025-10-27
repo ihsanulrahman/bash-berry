@@ -1,4 +1,4 @@
-# Clonify 🚀
+# BASH-BERRY 🚀
 
 A simple set of shell scripts for cloning my device repositories, setting up Git configs, and installing GPG keys.
 
@@ -9,13 +9,13 @@ A simple set of shell scripts for cloning my device repositories, setting up Git
 Clone device repositories:
 
 ```bash
-wget -q https://raw.githubusercontent.com/ihsanulrahman/Clonify/main/repo_clone.sh -O - | bash
+wget -q https://raw.githubusercontent.com/ihsanulrahman/bash-berry/main/repo_clone.sh -O - | bash
 ```
 
 Set up Git configs and GPG keys:
 
 ```bash
-wget -q https://raw.githubusercontent.com/ihsanulrahman/Clonify/main/git-gpg.sh -O - | bash
+wget -q https://raw.githubusercontent.com/ihsanulrahman/bash-berry/main/git-gpg.sh -O - | bash
 ```
 
 Notes
