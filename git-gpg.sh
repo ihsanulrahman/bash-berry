@@ -22,6 +22,80 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Function to install packages
+install_package() {
+    local package=$1
+    print_status "Installing $package..."
+    
+    if command_exists apt-get; then
+        # Debian/Ubuntu
+        sudo apt-get update && sudo apt-get install -y "$package"
+    elif command_exists yum; then
+        # CentOS/RHEL
+        sudo yum install -y "$package"
+    elif command_exists dnf; then
+        # Fedora
+        sudo dnf install -y "$package"
+    elif command_exists brew; then
+        # macOS
+        brew install "$package"
+    elif command_exists pacman; then
+        # Arch Linux
+        sudo pacman -Sy --noconfirm "$package"
+    else
+        print_error "Cannot determine package manager. Please install $package manually."
+        return 1
+    fi
+}
+
+# Function to install gnupg2
+install_gnupg2() {
+    print_status "Installing gnupg2..."
+    
+    if command_exists apt-get; then
+        sudo apt-get update && sudo apt-get install -y gnupg2
+    elif command_exists yum; then
+        sudo yum install -y gnupg2
+    elif command_exists dnf; then
+        sudo dnf install -y gnupg2
+    elif command_exists brew; then
+        brew install gnupg2
+    elif command_exists pacman; then
+        sudo pacman -Sy --noconfirm gnupg2
+    else
+        print_error "Cannot determine package manager. Please install gnupg2 manually."
+        return 1
+    fi
+}
+
+# Function to install xxd
+install_xxd() {
+    print_status "Installing xxd..."
+    
+    if command_exists apt-get; then
+        # On Debian/Ubuntu, xxd is in vim-common or vim-common package
+        sudo apt-get update && sudo apt-get install -y vim-common
+    elif command_exists yum; then
+        # On CentOS/RHEL, xxd is in vim-common
+        sudo yum install -y vim-common
+    elif command_exists dnf; then
+        # On Fedora
+        sudo dnf install -y vim-common
+    elif command_exists brew; then
+        # On macOS, xxd comes with vim
+        brew install vim
+    elif command_exists pacman; then
+        # On Arch Linux
+        sudo pacman -Sy --noconfirm vim
+    else
+        print_warning "Cannot determine package manager. Please install xxd manually."
+        print_warning "On Ubuntu/Debian: sudo apt-get install vim-common"
+        print_warning "On CentOS/RHEL: sudo yum install vim-common"
+        print_warning "On macOS: brew install vim"
+        return 1
+    fi
+}
+
 # Function to extract key ID from GPG public key file
 extract_key_id() {
     local key_file="$1"
@@ -59,17 +133,30 @@ extract_key_id() {
 check_prerequisites() {
     print_status "Checking prerequisites..."
     
+    # Check and install git if needed
     if ! command_exists git; then
-        print_error "Git is not installed. Please install git first."
-        exit 1
+        print_error "Git is not installed. Installing git..."
+        if ! install_package git; then
+            print_error "Failed to install git. Please install git manually."
+            exit 1
+        fi
     fi
     
+    # Check and install gpg2 if needed
     if ! command_exists gpg2; then
-        print_error "GPG2 is not installed. Please install gnupg2 first."
-        echo "On Ubuntu/Debian: sudo apt-get install gnupg2"
-        echo "On macOS: brew install gnupg2"
-        echo "On CentOS/RHEL: sudo yum install gnupg2"
-        exit 1
+        print_warning "GPG2 is not installed. Installing gnupg2..."
+        if ! install_gnupg2; then
+            print_error "Failed to install gnupg2. Please install gnupg2 manually."
+            exit 1
+        fi
+    fi
+    
+    # Check and install xxd if needed
+    if ! command_exists xxd; then
+        print_warning "xxd is not installed. Installing xxd..."
+        if ! install_xxd; then
+            print_warning "xxd installation failed, but continuing without it..."
+        fi
     fi
     
     print_success "All prerequisites are met"
@@ -79,7 +166,7 @@ check_prerequisites() {
 configure_git() {
     print_status "Configuring Git..."
     
-    # Hardcoded user details
+    # Hardcoded details
     git_name="iHSAN"
     git_email="ihsanulrahman@proton.me"
     
@@ -94,7 +181,7 @@ configure_git() {
     echo "Email: $git_email"
 }
 
-# Clone and import GPG keys
+# Clone and import GPGkeys
 setup_gpg() {
     print_status "Setting up GPG keys..."
     
@@ -121,8 +208,8 @@ setup_gpg() {
     print_status "Looking for key files..."
     
     # Check for specific key files
-    if [ ! -f "private.asc" ] && [ ! -f "public.asc" ]; then
-        print_error "Neither private.asc nor public.asc found in the repository"
+    if [ ! -f "private*.asc" ] && [ ! -f "public*.asc" ]; then
+        print_error "Neither private nor public keys found in the repository"
         echo "Available files:"
         ls -la
         cd ..
@@ -133,9 +220,9 @@ setup_gpg() {
     key_id=""
     
     # Import private key first
-    if [ -f "private.asc" ]; then
+    if [ -f "private*.asc" ]; then
         print_status "Importing private key from private.asc..."
-        if gpg2 --import "private.asc"; then
+        if gpg2 --import "private*.asc"; then
             imported_keys+=("private.asc")
             print_success "Private key imported successfully"
         else
@@ -148,15 +235,15 @@ setup_gpg() {
     fi
     
     # Import public key
-    if [ -f "public.asc" ]; then
+    if [ -f "public*.asc" ]; then
         print_status "Importing public key from public.asc..."
-        if gpg2 --import "public.asc"; then
+        if gpg2 --import "public*.asc"; then
             imported_keys+=("public.asc")
             print_success "Public key imported successfully"
             
             # Extract key ID from public key
             print_status "Extracting key ID from public.asc..."
-            extracted_key_id=$(extract_key_id "public.asc")
+            extracted_key_id=$(extract_key_id "public*.asc")
             if [ -n "$extracted_key_id" ]; then
                 key_id="$extracted_key_id"
                 print_success "Extracted key ID: $key_id"
