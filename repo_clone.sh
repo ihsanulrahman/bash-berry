@@ -10,7 +10,7 @@ declare -a REPOS=(
     "https://github.com/mi-atoll/vendor_xiaomi_miatoll|vendor/xiaomi/miatoll|16|1"
     "https://github.com/ihsanulrahman/android_kernel_xiaomi_sm6250|kernel/xiaomi/sm6250|16|1"
     "https://github.com/LineageOS/android_hardware_sony_timekeep|hardware/sony/timekeep|lineage-22.2|0"
-    "https://github.com/mi-atoll/vendor_xiaomi_miuicamera-miatoll|vendor/xiaomi/miuicamera-miatoll|16|0"
+    "https://github.com/mi-atoll/vendor_xiaomi_miuicamera-miatoll|vendor/xiaomi/miuicamera-miatoll|test|0"
 )
 
 RED='\033[0;31m'
