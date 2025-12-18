@@ -104,7 +104,6 @@ extract_key_id() {
         print_error "Key file not found: $key_file"
         return 1
     fi
-    
     # Try to extract key ID using gpg2
     local key_id
     key_id=$(gpg2 --with-colons --import-options show-only --import "$key_file" 2>/dev/null | \
@@ -127,6 +126,140 @@ extract_key_id() {
         print_error "Could not extract key ID from $key_file"
         return 1
     fi
+}
+
+    # install Python packages
+install_python_packages() {
+    print_status "Installing Python packages..."
+    
+    # Packages
+    packages=("python3-requests" "python3-pil")
+    
+    for package in "${packages[@]}"; do
+        print_status "Checking/installing $package..."
+        
+        if command_exists apt-get; then
+            # Debian/Ubuntu
+            if dpkg -l | grep -q "^ii.*$package"; then
+                print_status "$package is already installed"
+            else
+                sudo apt-get update && sudo apt-get install -y "$package"
+            fi
+        elif command_exists yum; then
+            # CentOS/RHEL 
+            local yum_package
+            case "$package" in
+                "python3-requests")
+                    yum_package="python3-requests"
+                    ;;
+                "python3-pil")
+                    yum_package="python3-pillow"
+                    ;;
+                *)
+                    yum_package="$package"
+                    ;;
+            esac
+            
+            if rpm -q "$yum_package" >/dev/null 2>&1; then
+                print_status "$yum_package is already installed"
+            else
+                sudo yum install -y "$yum_package"
+            fi
+        elif command_exists dnf; then
+            # Fedora
+            local dnf_package
+            case "$package" in
+                "python3-requests")
+                    dnf_package="python3-requests"
+                    ;;
+                "python3-pil")
+                    dnf_package="python3-pillow"
+                    ;;
+                *)
+                    dnf_package="$package"
+                    ;;
+            esac
+            
+            if rpm -q "$dnf_package" >/dev/null 2>&1; then
+                print_status "$dnf_package is already installed"
+            else
+                sudo dnf install -y "$dnf_package"
+            fi
+        elif command_exists brew; then
+            # macOS
+            print_status "On macOS, installing Python packages via pip3..."
+            pip3 install requests pillow
+            return 0
+        elif command_exists pacman; then
+            # Arch Linux
+            local arch_package
+            case "$package" in
+                "python3-requests")
+                    arch_package="python-requests"
+                    ;;
+                "python3-pil")
+                    arch_package="python-pillow"
+                    ;;
+                *)
+                    arch_package="$package"
+                    ;;
+            esac
+            
+            if pacman -Qi "$arch_package" >/dev/null 2>&1; then
+                print_status "$arch_package is already installed"
+            else
+                sudo pacman -Sy --noconfirm "$arch_package"
+            fi
+        else
+            print_warning "Cannot determine package manager for $package"
+            print_warning "Please install manually:"
+            print_warning "  Ubuntu/Debian: sudo apt install $package"
+            print_warning "  CentOS/RHEL: sudo yum install $package (names may differ)"
+            print_warning "  Fedora: sudo dnf install $package (names may differ)"
+            print_warning "  macOS: pip3 install requests pillow"
+            print_warning "  Arch: sudo pacman -S ${package/python3-/python-}"
+            return 1
+        fi
+    done
+    
+    print_success "Python packages installation completed"
+}
+
+# Alternative using pip3 
+install_python_packages_pip() {
+    print_status "Installing Python packages via pip3..."
+    
+    # Check for pip3
+    if ! command_exists pip3; then
+        print_status "pip3 not found, installing..."
+        if command_exists apt-get; then
+            sudo apt-get install -y python3-pip
+        elif command_exists yum; then
+            sudo yum install -y python3-pip
+        elif command_exists dnf; then
+            sudo dnf install -y python3-pip
+        elif command_exists brew; then
+            brew install python3
+        elif command_exists pacman; then
+            sudo pacman -Sy --noconfirm python-pip
+        else
+            print_error "Cannot install pip3. Please install pip3 manually."
+            return 1
+        fi
+    fi
+    
+    # Install using pip3
+    packages=("requests" "pillow")
+    for package in "${packages[@]}"; do
+        print_status "Installing $package via pip3..."
+        if pip3 list | grep -i "^$package" >/dev/null 2>&1; then
+            print_status "$package is already installed via pip3"
+        else
+            pip3 install "$package"
+        fi
+    done
+    
+    print_success "Python packages installed via pip3"
 }
 
 # Check prerequisites
@@ -156,6 +289,65 @@ check_prerequisites() {
         print_warning "xxd is not installed. Installing xxd..."
         if ! install_xxd; then
             print_warning "xxd installation failed, but continuing without it..."
+        fi
+    fi
+
+    # Check and install Python packages if needed
+    print_status "Checking Python packages..."
+    
+    # Check if Python 3 is installed
+    if ! command_exists python3; then
+        print_warning "Python3 is not installed. Installing..."
+        if ! install_package python3; then
+            print_warning "Python3 installation failed, skipping Python packages..."
+            return 0
+        fi
+    else
+        print_status "Python3 is already installed"
+    fi
+    
+    # Check if pip3 is installed
+    if ! command_exists pip3; then
+        print_status "pip3 not found, installing..."
+        if command_exists apt-get; then
+            sudo apt-get install -y python3-pip
+        elif command_exists yum; then
+            sudo yum install -y python3-pip
+        elif command_exists dnf; then
+            sudo dnf install -y python3-pip
+        elif command_exists brew; then
+            brew install python3
+        elif command_exists pacman; then
+            sudo pacman -Sy --noconfirm python-pip
+        else
+            print_warning "Cannot install pip3. Please install pip3 manually."
+            return 1
+        fi
+    else
+        print_status "pip3 is already installed"
+    fi
+    
+    # Check and install requests if needed
+    if python3 -c "import requests" 2>/dev/null; then
+        print_status "requests is already installed"
+    else
+        print_status "Installing requests..."
+        if pip3 install requests; then
+            print_success "Successfully installed requests"
+        else
+            print_warning "Failed to install requests"
+        fi
+    fi
+    
+    # Check and install Pillow if needed
+    if python3 -c "import PIL" 2>/dev/null; then
+        print_status "Pillow is already installed"
+    else
+        print_status "Installing Pillow..."
+        if pip3 install pillow; then
+            print_success "Successfully installed Pillow"
+        else
+            print_warning "Failed to install Pillow"
         fi
     fi
     
