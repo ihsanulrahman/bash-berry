@@ -8,6 +8,7 @@
 declare -a REPOS=(
     "https://github.com/mi-atoll/device_xiaomi_miatoll|device/xiaomi/miatoll|16-volt|0"
     "https://github.com/mi-atoll/vendor_xiaomi_miatoll|vendor/xiaomi/miatoll|16|1"
+    "https://github.com/mi-atoll/vendor_xiaomi_miuicamera-miatoll|vendor/xiaomi/miuicamera-miatoll|16|1"
     "https://github.com/ihsanulrahman/android_kernel_xiaomi_sm6250|kernel/xiaomi/sm6250|16|1"
     "https://github.com/LineageOS/android_hardware_sony_timekeep|hardware/sony/timekeep|lineage-23.0|0"
     "https://github.com/ihsanulrahman/vendor_voltage-priv_keys|vendor/voltage-priv/keys|16|0"
